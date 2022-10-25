@@ -1,0 +1,9 @@
+verifast/generated.c
+
+frama-c/generated.c
+
+refinedc/_CoqProject
+refinedc/_build/*
+refinedc/dune-project
+refinedc/proofs/*
+refinedc/rc-project.toml
