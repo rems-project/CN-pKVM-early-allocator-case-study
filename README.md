@@ -1,4 +1,4 @@
-# pKVM early allocator case study
+# CN pKVM early allocator case study
 
 This repository contains a small case study, comparing four tools for
 the verification of C code: CN, Frama-C, RefinedC, and VeriFast. The
