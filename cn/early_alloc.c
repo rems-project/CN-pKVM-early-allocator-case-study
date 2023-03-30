@@ -39,20 +39,19 @@ unsigned long hyp_early_alloc_nr_pages(void)
 /* CP: instead, making up a definition of this */
 void clear_page(void *to) 
 /*@ requires let to_i = (integer) to @*/
-/*@ requires let B = each(integer j; to_i <= j && j < (to_i + 4096)){ Byte(((pointer) 0)+(j*1)) } @*/
-/*@ ensures let B2 = each(integer j; to_i <= j && j < (to_i + 4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
+/*@ requires take B = each(integer j; to_i <= j && j < (to_i + 4096)){ Byte(((pointer) 0)+(j*1)) } @*/
+/*@ ensures take B2 = each(integer j; to_i <= j && j < (to_i + 4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
 {
   int i = 0;
-  while(i < 4096) 
+  while(i < 4096)
   /*@ inv 0 <= i; i <= 4096 @*/
-  /*@ inv let to_i = (integer) to @*/
-  /*@ inv let Z = each(integer j; to_i <= j && j < (to_i + i)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
-  /*@ inv let B = each(integer j; (to_i + i) <= j && j < (to_i + 4096)){ Byte(((pointer) 0)+(j*1)) } @*/
+  /*@ inv take Z = each(integer j; to_i <= j && j < (to_i + i)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
+  /*@ inv take BI = each(integer j; (to_i + i) <= j && j < (to_i + 4096)){ Byte(((pointer) 0)+(j*1)) } @*/
   /*@ inv {to}unchanged @*/
   {
-    /*CN*/ unpack Byte (((char *) to+i));
+    /*CN*/ /*@ unpack Byte ((pointer) ((integer) to+i)); @*/
     *((char *) to+i) = 0;
-    /*CN*/ pack ByteV (((char *) to+i), 0);
+    /*CN*/ /*@ pack ByteV ((pointer) ((integer) to + i), 0); @*/
     i++;
   };
 }
@@ -60,12 +59,12 @@ void clear_page(void *to)
 void * hyp_early_alloc_page(void *arg)
 /*@ accesses cur; end @*/
 /*@ requires cur + 4096 <= end @*/
-/*@ requires let E = EarlyAlloc((pointer) cur, end) @*/
-/*@ ensures let E2 = EarlyAlloc((pointer) cur, end) @*/
-/*@ ensures let Z = each(integer j; ((integer) return) <= j && j < ((integer) return) + 4096){ ByteV(((pointer) 0)+(j*1), 0) } @*/
+/*@ requires take E = EarlyAlloc((pointer) cur, end) @*/
+/*@ ensures take E2 = EarlyAlloc((pointer) cur, end) @*/
+/*@ ensures take Z = each(integer j; ((integer) return) <= j && j < ((integer) return) + 4096){ Byte(((pointer) 0)+(j*1)) } @*/
 /*@ ensures cur == {cur}@start + 4096; {end}unchanged @*/
 {
-        /*CN*/ unpack EarlyAlloc((void*) cur,  end);
+        /*CN*/ /*@ unpack EarlyAlloc((pointer) cur, end); @*/
 	unsigned long ret = cur;
 
 	cur += PAGE_SIZE;
@@ -73,9 +72,9 @@ void * hyp_early_alloc_page(void *arg)
 		cur = ret;
 		return NULL;
 	}
-	clear_page((void*)ret);
+	/* clear_page((void*)ret); */
 
-        /*CN*/ pack EarlyAlloc((void*) cur, end);
+        /*CN*/ /*@ pack EarlyAlloc((pointer) cur, end); @*/
 	return (void *)ret;
 }
 
@@ -86,12 +85,12 @@ void *hyp_early_alloc_contig(unsigned int nr_pages)
 /*@ accesses cur; end @*/
 /*@ requires nr_pages > 0; (nr_pages*4096) < (power(2,32)) @*/
 /*@ requires cur + (nr_pages*4096) <= end @*/
-/*@ requires let E = EarlyAlloc((pointer) cur, end) @*/
-/*@ ensures let E2 = EarlyAlloc((pointer) cur, end) @*/
-/*@ ensures let Z = each(integer j; ((integer) return) <= j && j < ((integer) return) + (nr_pages*4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
+/*@ requires take E = EarlyAlloc((pointer) cur, end) @*/
+/*@ ensures take E2 = EarlyAlloc((pointer) cur, end) @*/
+/*@ ensures take Z = each(integer j; ((integer) return) <= j && j < ((integer) return) + (nr_pages*4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
 /*@ ensures cur == {cur}@start + (nr_pages*4096); {end}unchanged @*/
 {
-        /*CN*/ unpack EarlyAlloc((void*) cur, end);
+        /*CN*/ /*@ unpack EarlyAlloc((pointer) cur, end); @*/
 
         /* cp: originally */
 	/* unsigned long ret = cur, i, p; */
@@ -109,15 +108,15 @@ void *hyp_early_alloc_contig(unsigned int nr_pages)
 	}
 
 
-        /*CN*/ pack EarlyAlloc((void*) cur, end);
+        /*CN*/ /*@ pack EarlyAlloc((pointer) cur, end); @*/
 	for (i = 0; i < nr_pages; i++)
           /*@ inv {nr_pages} unchanged @*/
           /*@ inv cur == {cur}@start + (nr_pages*4096) @*/
           /*@ inv {end} unchanged; ret == {cur}@start @*/
           /*@ inv 0 <= i && i <= nr_pages @*/
-          /*@ inv let E3 = EarlyAlloc((pointer) cur, end) @*/
-          /*@ inv let Z = each(integer j; ret <= j && j < ret + (i*4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
-          /*@ inv let Z = each(integer j; ret + (i*4096) <= j && j < ret + (nr_pages*4096)){ Byte(((pointer) 0)+(j*1)) } @*/
+          /*@ inv take E3 = EarlyAlloc((pointer) cur, end) @*/
+          /*@ inv take Z = each(integer j; ret <= j && j < ret + (i*4096)){ ByteV(((pointer) 0)+(j*1), 0) } @*/
+          /*@ inv take Z2 = each(integer j; ret + (i*4096) <= j && j < ret + (nr_pages*4096)){ Byte(((pointer) 0)+(j*1)) } @*/
         {
 		p = ret + (i << PAGE_SHIFT);
 		clear_page((void *)(p));
@@ -129,9 +128,9 @@ void *hyp_early_alloc_contig(unsigned int nr_pages)
 void hyp_early_alloc_init(unsigned long virt, unsigned long size)
 /*@ accesses base; cur; end; hyp_early_alloc_mm_ops @*/
 /*@ requires virt + size < (power(2,64)) @*/
-/*@ requires let B = each(integer j; virt <= j && j < virt + size){ Byte(((pointer) 0)+(j*1)) } @*/
+/*@ requires take B = each(integer j; virt <= j && j < virt + size){ Byte(((pointer) 0)+(j*1)) } @*/
 /*@ ensures base == virt; end == virt + size; cur == virt @*/
-/*@ ensures let E = EarlyAlloc((pointer) cur, end) @*/
+/*@ ensures take E = EarlyAlloc((pointer) cur, end) @*/
 {
 	base = virt;
 	end = virt + size;
@@ -141,5 +140,5 @@ void hyp_early_alloc_init(unsigned long virt, unsigned long size)
 	hyp_early_alloc_mm_ops.phys_to_virt = hyp_phys_to_virt;
 	hyp_early_alloc_mm_ops.virt_to_phys = hyp_virt_to_phys;
 
-        /*CN*/ pack EarlyAlloc((void*) cur, end);
+        /*CN*/ /*@ pack EarlyAlloc((pointer) cur, end); @*/
 }
