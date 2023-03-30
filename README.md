@@ -8,7 +8,9 @@ Android.
 The un-annotated C and header files can be found under
 `original`. Each file has a comment recording the original source code
 location in the Linux source tree, retaining the original copyright
-headers of their authors. `GPL-2.0` contains a copy of the GPL 2.0
+headers of their authors and license information. 
+
+The files are licensed under GPL-2.0. `GPL-2.0` contains a copy of the GPL-2.0
 license. Comments in the files point out where the code has been
 modified (minor edits and additions).
 
